@@ -57,7 +57,7 @@ _log.debug("%s version %s", __name__, __version__)
 _log.debug("Python %s on %s", sys.version, sys.platform)
 
 _active_devicegroups = []
-_change_queue: queue.Queue(typing.Dict[str, typing.Any]) = queue.Queue()
+_change_queue: queue.Queue(typing.Dict[str, typing.Any]) = queue.Queue()  # type: ignore
 
 __exit_event = threading.Event()
 def __signal_handler(signum, frame):
