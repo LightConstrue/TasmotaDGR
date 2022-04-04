@@ -166,9 +166,9 @@ def __udp_manager():
                         else:
                             data += struct.pack('<BI',flag.value,value)
                     elif (flag < DevGroupItem.DGR_ITEM_MAX_STRING):
-                        data += struct.pack('<BB{}sx'.format(len(value)),flag.value,len(value),value)
+                        data += struct.pack('<BB{}sx'.format(len(value)),flag.value,len(value)+1,value)
                     else:
-                        data += struct.pack('<BB{}Bx'.format(len(value)),flag.value,len(value),*value)
+                        data += struct.pack('<BB{}Bx'.format(len(value)),flag.value,len(value)+1,*value)
                 data += struct.pack('<B',DevGroupItem.DGR_ITEM_EOL)
             data = bytes(data)
             _log.debug("Encoded packet Data: %s", data)
@@ -212,14 +212,14 @@ def __udp_manager():
                 elif (flag < DevGroupItem.DGR_ITEM_MAX_STRING):
                     length = int.from_bytes(data[1:2], "little", signed=False)
                     string_value = ''
-                    for byte in data[2:length-1]:
+                    for byte in data[2:2+length-1]:
                         string_value+=chr(byte)
                     self.mailbox.append((flag,string_value))
                     del data[:2+length]
                 else:
                     length = int.from_bytes(data[1:2], "little", signed=False)
                     int_array = []
-                    for byte in data[2:length-1]:
+                    for byte in data[2:2+length-1]:
                         int_array.append(byte)
                     self.mailbox.append((flag,int_array))
                     del data[:2+length]
