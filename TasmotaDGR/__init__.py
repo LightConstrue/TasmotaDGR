@@ -133,7 +133,7 @@ def __udp_manager():
         DGR_ITEM_LAST_STRING = 194
         DGR_ITEM_MAX_STRING = 223
 
-        DGR_ITEM_LIGHT_CHANNELS = 224 # Value = [red, green, blue]
+        DGR_ITEM_LIGHT_CHANNELS = 224 # Value = [red, green, blue, cw, ww]
         DGR_ITEM_LAST_ARRAY = 225
         DGR_ITEM_MAX_ARRAY = 255
 
@@ -167,6 +167,8 @@ def __udp_manager():
                             data += struct.pack('<BI',flag.value,value)
                     elif (flag < DevGroupItem.DGR_ITEM_MAX_STRING):
                         data += struct.pack('<BB{}sx'.format(len(value)),flag.value,len(value)+1,value)
+                    elif (flag == DevGroupItem.DGR_ITEM_LIGHT_CHANNELS):
+                        data += struct.pack('<BB{}Bx'.format(len(value)),flag.value,len(value)+1,*value)
                     else:
                         data += struct.pack('<BB{}Bx'.format(len(value)),flag.value,len(value)+1,*value)
                 data += struct.pack('<B',DevGroupItem.DGR_ITEM_EOL)
@@ -215,6 +217,13 @@ def __udp_manager():
                     for byte in data[2:2+length-1]:
                         string_value+=chr(byte)
                     self.mailbox.append((flag,string_value))
+                    del data[:2+length]
+                elif (flag == DevGroupItem.DGR_ITEM_LIGHT_CHANNELS):
+                    length = int.from_bytes(data[1:2], "little", signed=False)
+                    int_array = []
+                    for byte in data[2:2+length-1]:
+                        int_array.append(byte)
+                    self.mailbox.append((flag,int_array))
                     del data[:2+length]
                 else:
                     length = int.from_bytes(data[1:2], "little", signed=False)
