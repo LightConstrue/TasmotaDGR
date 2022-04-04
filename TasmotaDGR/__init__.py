@@ -256,7 +256,8 @@ def __udp_manager():
         else:
             try:
                 if (validate(data)):
-                    _log.debug("Recieved packet From: %s Data: %s", addr, data)
+                    remoteip = addr[0]
+                    _log.debug("Recieved packet From: %s Data: %s", remoteip, data)
                     packet = DevGroupPacket()
                     packet.decode(data)
 
@@ -268,14 +269,14 @@ def __udp_manager():
                         if DevGroupMessageFlag.DGR_FLAG_ACK in packet.flags:
                             pass
                         
-                        if (addr not in devicegroup._members):
-                            devicegroup._members[addr] = packet.sequence
+                        if (remoteip not in devicegroup._members):
+                            devicegroup._members[remoteip] = packet.sequence
 
                         if DevGroupMessageFlag.DGR_FLAG_RESET in packet.flags:
-                            devicegroup._members[addr] = 1
+                            devicegroup._members[remoteip] = 1
 
-                        if (devicegroup._members[addr] - 100 > packet.sequence):
-                            devicegroup._members[addr] = packet.sequence - 1
+                        if (devicegroup._members[remoteip] - 100 > packet.sequence):
+                            devicegroup._members[remoteip] = packet.sequence - 1
 
                         if DevGroupMessageFlag.DGR_FLAG_MORE_TO_COME not in packet.flags:
                             replydata = DevGroupPacket(name=packet.name, sequence=packet.sequence, flags=DevGroupMessageFlag.DGR_FLAG_ACK).encode()
@@ -293,8 +294,8 @@ def __udp_manager():
                                 sock.sendto(replydata, (_MCAST_ADDR, _MCAST_PORT))
                                 sock.sendto(replydata, addr)
 
-                        if DevGroupMessageFlag.DGR_FLAG_FULL_STATUS in packet.flags and packet.sequence > devicegroup._members[addr]:
-                            devicegroup._members[addr] = packet.sequence
+                        if DevGroupMessageFlag.DGR_FLAG_FULL_STATUS in packet.flags and packet.sequence > devicegroup._members[remoteip]:
+                            devicegroup._members[remoteip] = packet.sequence
 
                             if not devicegroup._ready:
                                 if DevGroupItem.DGR_ITEM_LIGHT_BRI in packet.mailbox:
@@ -309,8 +310,8 @@ def __udp_manager():
 
                                 devicegroup._set_ready(True)
 
-                        if DevGroupMessageFlag.DGR_FLAG_NONE in packet.flags and packet.sequence > devicegroup._members[addr]:
-                            devicegroup._members[addr] = packet.sequence
+                        if DevGroupMessageFlag.DGR_FLAG_NONE in packet.flags and packet.sequence > devicegroup._members[remoteip]:
+                            devicegroup._members[remoteip] = packet.sequence
 
                             if DevGroupItem.DGR_ITEM_LIGHT_BRI in packet.mailbox:
                                 if devicegroup._dimmer != packet.mailbox[DevGroupItem.DGR_ITEM_LIGHT_BRI]:
@@ -324,7 +325,7 @@ def __udp_manager():
                                     devicegroup._set_power(False)
  
             except:
-                _log.error("Error in packet: From: %s Data: %s %s", addr, data, traceback.format_exc())
+                _log.error("Error in packet: From: %s Data: %s %s", addr[0], data, traceback.format_exc())
         
         for devicegroup in _active_devicegroups:
             try:
